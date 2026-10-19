@@ -65,11 +65,15 @@ http://127.0.0.1:8000/?name=%7B%25%20for%20c%20in%20%5B%5D.__class__.__base__.__
 
 ## Root‑cause analysis
 
-*(根因分析)*
+The root cause of this SSTI vulnerability is that the application directly concatenates user-controlled query parameter `name` into the Jinja2 template source string and instantiates `Template()` for rendering. User-supplied content is treated as template source code rather than ordinary user data. Attackers can inject Jinja2 template syntax `{{ }}` and `{% %}`. By traversing Python built-in subclass chains, attackers can obtain dangerous functions such as `eval`, and finally achieve remote code execution (RCE) on the server side. RCE is only an exploitation consequence derived from SSTI, not an independent vulnerability. Simple keyword blacklist filtering cannot fully defend against this risk because multiple bypass techniques exist.
 
 ## Applied fix description
 
-*(修复描述)*
+The mitigation is to separate template source code and user-controlled input. We adopt Flask’s standard `render_template()` function: create `templates` directory and place static HTML template file `index.html`. User-controlled `name` is passed as a template variable parameter instead of being spliced into template source. Jinja2 enables automatic escaping by default. User input will be parsed as plain-text content and will no longer be compiled and executed as template code. This fix eliminates SSTI vulnerability. Meanwhile, it also mitigates XSS risk.
+
+![](images/pic7.png)
+
+![](images/pic6.png)
 
 ## Proof of fix
 
