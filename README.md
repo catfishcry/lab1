@@ -1,19 +1,34 @@
-# Lab1 Secure REST API
+# Lab1 Secure REST API Development with CI/CD and Real CVE Vulnerability Analysis
 
 ## Project & API description
 
 Technology stack: Python Flask + SQLite + SQLAlchemy ORM
+
+Environment:
+
+```
+Docker version 29.8.2
+Docker Compose v5.6.0
+git version 2.45.1.windows.1
+Python 3.13.9
+Postman x86_64 11.51.5
+```
+
 Endpoints:
 
 1. POST /auth/register
 - Input JSON: {"username":"xxx","password":"xxx"}
 - Register new user, store bcrypt hashed password. Return 201 when success.
+![](images/pic11.png)
 2. POST /auth/login
 - Input JSON: {"username":"xxx","password":"xxx"}
 - Return JWT access‑token for authenticated users.
+![](images/pic12.png)
 3. GET /api/data
 - Protected endpoint, Header: Authorization: Bearer <token>
 - Return list of users.
+![](images/pic13.png)
+![](images/pic14.png)
 
 ## Implemented security measures
 
