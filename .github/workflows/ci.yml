@@ -32,9 +32,9 @@ jobs:
           name: bandit-sast-report
           path: bandit-report.json
 
-      # SCA组件漏洞扫描 safety
+      # SCA组件漏洞扫描 safety，参数顺序修正
       - name: SCA safety dependency scan
-        run: safety check > safety-report.txt --exit-zero
+        run: safety check --exit-zero > safety-report.txt
 
       - name: Upload Safety report
         uses: actions/upload-artifact@v4
