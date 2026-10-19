@@ -22,11 +22,11 @@ jobs:
           pip install -r requirements.txt
           pip install bandit safety
 
-      # SAST Bandit 静态源代码扫描（--exit-zero 可用）
+      # SAST Bandit 静态源代码扫描
       - name: SAST Bandit scan
         run: bandit -r . -f json -o bandit-report.json --exit-zero
 
-      # SCA Safety依赖扫描，用 || true 捕获错误，防止CI失败
+      # SCA Safety依赖扫描
       - name: SCA safety dependency scan
         run: safety check > safety-report.txt || true
 
