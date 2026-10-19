@@ -34,49 +34,52 @@ Endpoints:
 
 ## Selected CVE information
 
-CVE‑ID: CVE‑2019‑10906 Flask Jinja2 SSTI
-Brief description: Flask is a popular Python web framework that uses Jinja2 as its template engine. A Server-Side Template Injection (SSTI) vulnerability can occur when user input is directly rendered in Jinja2 templates without proper sanitization, potentially leading to remote code execution.
+CVE‑ID: CVE‑2017‑12794
+
+Brief description: Django versions prior to 1.11.5 and 1.10.8 contain a reflected cross‑site‑scripting (XSS) vulnerability. When `DEBUG=True` is enabled, the debug error page renders database‑generated error messages without proper HTML escaping. Malicious JavaScript stored in database can be executed in victim’s browser when database constraint error occurs.
 
 ## CVE reproduction steps
 
-Execute the following commands to build and start a Web application based on Flask 1.1.1:
+Execute the following commands to build and start the vulnerable Django application:
 
 ```
 D:
-cd D:\vulhub-env\vulhub\flask\ssti
+cd D:\vulhub-env\vulhub\django\CVE-2017-12794
 docker-compose up -d
 ```
 
 ![](images/pic5.png)
 
-After the server starts, visit:
+After the server starts, first request creates a user with malicious javascript payload:
 
 ```
-http://127.0.0.1:8000/?name={{7*7}}
+http://127.0.0.1:8000/create_user/?username=<script>alert('XSS')</script>
 ```
 
-![SSTI vulnerability verification(before fix)](images/pic1.png)
+![](images/pic1.png)
 
-```
-http://127.0.0.1:8000/?name=%7B%25%20for%20c%20in%20%5B%5D.__class__.__base__.__subclasses__()%20%25%7D%0A%7B%25%20if%20c.__name__%20%3D%3D%20%27catch_warnings%27%20%25%7D%0A%20%20%7B%25%20for%20b%20in%20c.__init__.__globals__.values()%20%25%7D%0A%20%20%7B%25%20if%20b.__class__%20%3D%3D%20%7B%7D.__class__%20%25%7D%0A%20%20%20%20%7B%25%20if%20%27eval%27%20in%20b.keys()%20%25%7D%0A%20%20%20%20%20%20%7B%7B%20b%5B%27eval%27%5D(%27__import__(%22os%22).popen(%22id%22).read()%27)%20%7D%7D%0A%20%20%20%20%7B%25%20endif%20%25%7D%0A%20%20%7B%25%20endif%20%25%7D%0A%20%20%7B%25%20endfor%20%25%7D%0A%7B%25%20endif%20%25%7D%0A%7B%25%20endfor%20%25%7D
-```
-
-![RCE exploitation result(before fix)](images/pic2.png)
-
-## Root‑cause analysis
-
-The root cause of this SSTI vulnerability is that the application directly concatenates user-controlled query parameter `name` into the Jinja2 template source string and instantiates `Template()` for rendering. User-supplied content is treated as template source code rather than ordinary user data. Attackers can inject Jinja2 template syntax `{{ }}` and `{% %}`. By traversing Python built-in subclass chains, attackers can obtain dangerous functions such as `eval`, and finally achieve remote code execution (RCE) on the server side. RCE is only an exploitation consequence derived from SSTI, not an independent vulnerability. Simple keyword blacklist filtering cannot fully defend against this risk because multiple bypass techniques exist.
-
-## Applied fix description
-
-The mitigation is to separate template source code and user-controlled input. We adopt Flask’s standard `render_template()` function: create `templates` directory and place static HTML template file `index.html`. User-controlled `name` is passed as a template variable parameter instead of being spliced into template source. Jinja2 enables automatic escaping by default. User input will be parsed as plain-text content and will no longer be compiled and executed as template code. This fix eliminates SSTI vulnerability. Meanwhile, it also mitigates XSS risk.
-
-![](images/pic7.png)
+Send the identical request a second time to trigger database unique constraint error:
 
 ![](images/pic6.png)
 
+![](images/pic4.png)
+
+## Root‑cause analysis
+
+This reflected XSS vulnerability only occurs under Django `DEBUG=True` mode.
+When duplicate username is submitted, database throws unique constraint conflict error. The raw error message fetched from database, which contains user‑controlled malicious content, is printed onto debug HTML page without output sanitization.
+The injected JavaScript tags are parsed and executed by browser. Attackers could abuse this flaw to steal cookies or hijack user sessions. This vulnerability only affects debug mode and will not appear in production environment with debug turned off. Simple keyword blacklist filtering cannot fully defend against this risk because multiple bypass techniques exist.
+
+## Applied fix description
+
+Two effective mitigations:
+
+1. Disable DEBUG mode in production: Set `DEBUG = False` in Django settings. Detailed debug error pages will not be exposed to users.
+
+2. Upgrade Django to fixed versions: 1.10.8 or 1.11.5 and above. The new versions add proper HTML escaping for database error content on debug pages.
+
+![](images/pic7.png)
+
 ## Proof of fix
 
-![Verification after vulnerability fix](images/pic3.png)
-
-![Verification after vulnerability fix](pic4.png)
+![](images/pic3.png)
