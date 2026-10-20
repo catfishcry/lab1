@@ -28,7 +28,8 @@ jobs:
 
       # SCA Safety依赖扫描
       - name: SCA safety dependency scan
-        run: safety check > safety-report.txt || true
+        run: |
+          python -W ignore::DeprecationWarning -m safety check > safety-report.txt || true
 
       # 上传两份报告
       - name: Upload Bandit report
