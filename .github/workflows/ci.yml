@@ -2,48 +2,46 @@ name: Lab1 CI Security Scan
 on:
   push:
     branches: [ main ]
+  
   pull_request:
     branches: [ main ]
 
 jobs:
   security-check:
     runs-on: ubuntu-24.04
+    
     steps:
       - name: Checkout source code
         uses: actions/checkout@v6
-
+      
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-
+      
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install bandit
-
-      # SAST Bandit 静态扫描（不变）
+          pip install bandit snyk
+      
+      # SAST Bandit 静态扫描
       - name: SAST Bandit scan
         env:
           SECRET_KEY: "lab1_secret_key_123456"
         run: bandit -r . || true
-
-      # SCA OWASP Dependency-Check 官方Action
-      - name: OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: "Lab1-Python-Flask"
-          path: "."
-          format: "HTML"
-          out: "dc-report"
-          args: >
-            --failOnCVSS 10
-            --noupdate
-
-      # 上传报告
-      - name: Upload OWASP Dependency-Check report
+      
+      # SCA Snyk
+      - name: SCA Snyk dependency scan
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk test --file=requirements.txt --org=catfishcry --json > snyk-report.json || true
+          snyk test --file=requirements.txt --org=catfishcry || true
+      
+      # 上传SCA报告
+      - name: Upload Snyk SCA report
         uses: actions/upload-artifact@v6
         with:
-          name: owasp-dependency-check-report
-          path: dc-report/
+          name: snyk-sca-report
+          path: snyk-report.json
