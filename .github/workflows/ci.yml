@@ -31,17 +31,3 @@ jobs:
       - name: SCA safety dependency scan
         run: |
           python -W ignore::DeprecationWarning -m safety scan > safety-report.txt || true
-
-      # 上传Bandit报告
-      - name: Upload Bandit report
-        uses: actions/upload-artifact@v6
-        with:
-          name: bandit-sast-report
-          path: bandit-report.txt
-
-      # 上传Safety报告
-      - name: Upload Safety report
-        uses: actions/upload-artifact@v6
-        with:
-          name: safety-sca-report
-          path: safety-report.txt
