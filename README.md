@@ -45,7 +45,9 @@ Endpoints:
 
 ## SAST & SCA scan reports
 
-![CI workflow cancelled screenshot](images/ci_screenshot.png)
+![CI workflow cancelled screenshot](images/pic8.png)
+
+![CI workflow cancelled screenshot](images/pic9.png)
 
 ## Selected CVE information
 
