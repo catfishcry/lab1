@@ -31,18 +31,13 @@ jobs:
           SECRET_KEY: "lab1_secret_key_123456"
         run: bandit -r . || true
 
-      - name: Setup Node.js for Snyk
-        uses: actions/setup-node@v5
-        with:
-          node-version: 20
-
       # SCA Snyk
       - name: SCA Snyk dependency scan
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          snyk test --file=requirements.txt --org=catfishcry --json > snyk-report.json || true
-          snyk test --file=requirements.txt --org=catfishcry || true
+        with:
+          args: --file=requirements.txt --org=catfishcry --json > snyk-report.json || true
       
       # 上传SCA报告
       - name: Upload Snyk SCA report
