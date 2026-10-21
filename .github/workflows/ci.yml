@@ -23,14 +23,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install bandit snyk
-      
+          pip install bandit
+
       # SAST Bandit 静态扫描
       - name: SAST Bandit scan
         env:
           SECRET_KEY: "lab1_secret_key_123456"
         run: bandit -r . || true
-      
+
+      - name: Setup Node.js for Snyk
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
       # SCA Snyk
       - name: SCA Snyk dependency scan
         env:
