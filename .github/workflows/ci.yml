@@ -23,11 +23,13 @@ jobs:
           pip install -r requirements.txt
           pip install bandit safety
 
-      # SAST Bandit 静态扫描，直接输出到日志
+      # SAST Bandit 静态扫描，注入SECRET_KEY环境变量
       - name: SAST Bandit scan
+        env:
+          SECRET_KEY: "lab1_secret_key_123456"
         run: bandit -r . || true
 
-      # SCA Safety依赖扫描，屏蔽警告，直接输出到日志
+      # SCA Safety依赖扫描，屏蔽警告
       - name: SCA safety dependency scan
         run: |
           python -W ignore::DeprecationWarning -m safety scan || true
