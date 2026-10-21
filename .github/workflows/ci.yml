@@ -18,7 +18,7 @@ jobs:
           python-version: "3.11"
 
       - name: Setup JDK 17 for OWASP Dependency-Check
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: "17"
           distribution: "temurin"
@@ -46,6 +46,7 @@ jobs:
             --out ./dc-report \
             --format HTML \
             --failOnCVSS 10
+            --noupdate
           || true
 
       # 上传SCA HTML报告工件
