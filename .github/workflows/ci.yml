@@ -17,39 +17,31 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Setup JDK 17 for OWASP Dependency-Check
-        uses: actions/setup-java@v5
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install bandit
 
-      # SAST Bandit 静态扫描
+      # SAST Bandit 静态扫描（不变）
       - name: SAST Bandit scan
         env:
           SECRET_KEY: "lab1_secret_key_123456"
         run: bandit -r . || true
 
-      # SCA OWASP Dependency-Check，生成HTML报告
-      - name: SCA OWASP Dependency-Check scan
-        run: |
-          wget https://github.com/dependency-check/DependencyCheck/releases/download/v10.0.0/dependency-check-10.0.0-release.zip
-          unzip dependency-check-10.0.0-release.zip
-          ./dependency-check/bin/dependency-check.sh \
-            --project Lab1-Python-Flask \
-            --scan . \
-            --out ./dc-report \
-            --format HTML \
+      # SCA OWASP Dependency-Check 官方Action
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "Lab1-Python-Flask"
+          path: "."
+          format: "HTML"
+          out: "dc-report"
+          args: >
             --failOnCVSS 10
             --noupdate
-          || true
 
-      # 上传SCA HTML报告工件
+      # 上传报告
       - name: Upload OWASP Dependency-Check report
         uses: actions/upload-artifact@v6
         with:
